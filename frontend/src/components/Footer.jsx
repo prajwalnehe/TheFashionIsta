@@ -37,39 +37,20 @@ const Footer = () => {
                         <p className="text-gray-300 text-sm leading-relaxed mt-4 max-w-md">
                             Curated apparel for modern wardrobes. We craft premium essentials and statement pieces designed for confidence, comfort, and everyday luxury.
                         </p>
-                        <div className="flex items-center gap-4 mt-6">
-                            {['Facebook', 'Instagram', 'Pinterest', 'YouTube'].map((social) => (
-                                <a
-                                    key={social}
-                                    href="#"
-                                    className="text-xs uppercase tracking-[0.2em] text-gray-400 hover:text-white transition-colors"
-                                    aria-label={social}
-                                >
-                                    {social}
-                                </a>
-                            ))}
-                        </div>
                     </div>
 
-                    <div className="lg:col-span-2">
+                    <div className="lg:col-span-4">
                         <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#d1d5db] mb-5">Shop</h3>
-                        <ul className="space-y-3 text-sm text-gray-300">
-                            <li><Link to="/products" className="hover:text-white transition-colors">All Products</Link></li>
-                            <li><Link to="/products?category=Formal Shirts" className="hover:text-white transition-colors">Shirts</Link></li>
-                            <li><Link to="/products?category=Tshirts" className="hover:text-white transition-colors">T-Shirts</Link></li>
-                            <li><Link to="/products?category=Pants" className="hover:text-white transition-colors">Bottoms</Link></li>
-                            <li><Link to="/products?category=Shoes" className="hover:text-white transition-colors">Footwear</Link></li>
-                        </ul>
-                    </div>
-
-                    <div className="lg:col-span-2">
-                        <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#d1d5db] mb-5">Company</h3>
-                        <ul className="space-y-3 text-sm text-gray-300">
-                            <li><Link to="/" className="hover:text-white transition-colors">Home</Link></li>
-                            <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
-                            <li><a href="#journal" className="hover:text-white transition-colors">Style Journal</a></li>
-                            <li><a href="#careers" className="hover:text-white transition-colors">Careers</a></li>
-                            <li><a href="#stores" className="hover:text-white transition-colors">Store Locator</a></li>
+                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-sm text-gray-300">
+                            <li><Link to="/products?category=Formal Shirts" className="hover:text-white transition-colors">Men Shirts</Link></li>
+                            <li><Link to="/products?category=Women Shirts" className="hover:text-white transition-colors">Women Shirts</Link></li>
+                            <li><Link to="/products?category=Shorts" className="hover:text-white transition-colors">Shorts</Link></li>
+                            <li><Link to="/products?category=Tshirts" className="hover:text-white transition-colors">Men Tshirts</Link></li>
+                            <li><Link to="/products?category=Women Tshirts" className="hover:text-white transition-colors">Women Tshirts</Link></li>
+                            <li><Link to="/products?category=Pants" className="hover:text-white transition-colors">Trouser</Link></li>
+                            <li><Link to="/products?category=Shoes" className="hover:text-white transition-colors">Shoes</Link></li>
+                            <li><Link to="/products?category=Sunglasses" className="hover:text-white transition-colors">Sunglasses</Link></li>
+                            <li><Link to="/products?category=Watches" className="hover:text-white transition-colors">Watches</Link></li>
                         </ul>
                     </div>
 
