@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { cartAPI } from '../services/api'
 import CategoryHeader, { navLinks } from './CategoryHeader'
 
 const Navbar = () => {
+    const location = useLocation()
+    const navigate = useNavigate()
     const { isAuthenticated, user, logout } = useAuth()
     const [activeLink, setActiveLink] = useState(null)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -52,6 +54,26 @@ const Navbar = () => {
         setIsMobileMenuOpen(false)
     }
 
+    const handleLogoClick = (e) => {
+        e.preventDefault()
+        setIsMobileMenuOpen(false)
+
+        if (location.pathname === '/') {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+            return
+        }
+
+        sessionStorage.setItem('smoothScrollHomeOnLogoClick', '1')
+        navigate('/')
+    }
+
+    useEffect(() => {
+        if (location.pathname === '/' && sessionStorage.getItem('smoothScrollHomeOnLogoClick') === '1') {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+            sessionStorage.removeItem('smoothScrollHomeOnLogoClick')
+        }
+    }, [location.pathname])
+
     return (
         <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
             <div className="max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
@@ -59,7 +81,7 @@ const Navbar = () => {
                 <div className="flex items-center justify-between h-16 md:h-18 lg:hidden">
                     {/* Mobile Logo */}
                     <div className="flex-shrink-0">
-                        <Link to="/" className="font-serif text-lg sm:text-xl font-bold tracking-tight text-[#111827] hover:text-[#1f2937] transition-colors">
+                        <Link to="/" onClick={handleLogoClick} className="font-serif text-lg sm:text-xl font-bold tracking-tight text-[#111827] hover:text-[#1f2937] transition-colors">
                             TheFashionIsta
                         </Link>
                     </div>
@@ -111,7 +133,7 @@ const Navbar = () => {
 
                     {/* Center - Logo */}
                     <div className="absolute left-1/2 transform -translate-x-1/2">
-                        <Link to="/" className="font-serif text-xl xl:text-2xl font-bold tracking-tight text-[#111827] hover:text-[#1f2937] transition-colors">
+                        <Link to="/" onClick={handleLogoClick} className="font-serif text-xl xl:text-2xl font-bold tracking-tight text-[#111827] hover:text-[#1f2937] transition-colors">
                             TheFashionIsta
                         </Link>
                     </div>
