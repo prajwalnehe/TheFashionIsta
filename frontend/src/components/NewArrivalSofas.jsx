@@ -12,7 +12,9 @@ const NewArrivalSofas = () => {
             try {
                 setLoading(true);
                 const response = await productsAPI.getAll({
-                    category: 'Tshirts',
+                    // Trend Drop should show Men Shirts
+                    // Men Shirts UI maps to Formal Shirts in URL, and backend aliasing also supports MEN SHIRTS.
+                    category: 'Formal Shirts',
                     sortBy: 'createdAt',
                     sortOrder: 'desc',
                     limit: 8
@@ -61,11 +63,23 @@ const NewArrivalSofas = () => {
                         >
                             <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
                                 <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
+                                    {(() => {
+                                        const productImage =
+                                            product.image ||
+                                            product.images?.image1 ||
+                                            product.images?.image2 ||
+                                            product.images?.image3 ||
+                                            'https://via.placeholder.com/900x900?text=Product+Image'
+                                        const productName = product.name || product.title || 'Product'
+
+                                        return (
                                     <img
-                                        src={product.image}
-                                        alt={product.name}
+                                        src={productImage}
+                                        alt={productName}
                                         className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                                     />
+                                        )
+                                    })()}
                                     <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-[#111827] text-[10px] font-bold px-3 py-1 uppercase tracking-widest rounded-full">
                                         {product.tag || 'New'}
                                     </div>
@@ -84,11 +98,19 @@ const NewArrivalSofas = () => {
                                     </div>
 
                                     <h3 className="text-gray-900 text-lg font-semibold mb-3 leading-tight group-hover:text-[#111827] transition-colors line-clamp-1">
-                                        {product.name}
+                                        {product.name || product.title || 'Product'}
                                     </h3>
 
                                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                                        <p className="text-[#111827] font-bold text-lg">₹{product.price.toLocaleString()}</p>
+                                        <p className="text-[#111827] font-bold text-lg">
+                                            ₹
+                                            {(typeof product.price === 'number'
+                                                ? product.price
+                                                : (typeof product.mrp === 'number'
+                                                    ? Math.round(product.mrp - ((product.mrp * (product.discountPercent || 0)) / 100))
+                                                    : 0)
+                                            ).toLocaleString()}
+                                        </p>
                                         <span className="text-sm font-semibold text-[#111827]">Shop Now →</span>
                                     </div>
                                 </div>

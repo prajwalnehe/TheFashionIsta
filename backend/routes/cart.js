@@ -75,14 +75,14 @@ router.post('/', optionalProtect, async (req, res) => {
 
     // Check if product exists
     const product = await Product.findById(productId);
-    if (!product || !product.isActive) {
+    if (!product || product.isActive === false) {
       return res.status(404).json({
         success: false,
         message: 'Product not found'
       });
     }
 
-    if (!product.inStock) {
+    if (product.inStock === false) {
       return res.status(400).json({
         success: false,
         message: 'Product is out of stock'

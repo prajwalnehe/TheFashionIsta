@@ -8,6 +8,7 @@ import InteriorSolutions from '../components/InteriorSolutions'
 import ModernLuxury from '../components/ModernLuxury'
 import NewArrivalSofas from '../components/NewArrivalSofas'
 import WhyChooseTheFashionIsta from '../components/WhyChooseTheFashionIsta'
+import ShortsShowcase from '../components/ShortsShowcase'
 
 const Home = () => {
     return (
@@ -19,6 +20,7 @@ const Home = () => {
             <BestSeller />
 
             <StyleInspiration />
+            <ShortsShowcase />
             <InteriorSolutions />
             <WhyChooseTheFashionIsta />
 

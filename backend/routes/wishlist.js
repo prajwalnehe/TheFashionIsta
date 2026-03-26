@@ -14,7 +14,11 @@ router.use(protect);
 router.get('/', async (req, res) => {
   try {
     let wishlist = await Wishlist.findOne({ user: req.user._id })
-      .populate('products', 'name image price originalPrice inStock rating reviews category tag');
+      .populate(
+        'products',
+        // Support both old and manual-added product schema shapes
+        'name title image mrp discountPercent price originalPrice inStock rating reviews category tag images.image1 images.image2 images.image3'
+      );
 
     if (!wishlist) {
       wishlist = await Wishlist.create({ user: req.user._id, products: [] });
@@ -50,7 +54,8 @@ router.post('/', async (req, res) => {
 
     // Check if product exists
     const product = await Product.findById(productId);
-    if (!product || !product.isActive) {
+    // Allow manual products that may not have `isActive` set
+    if (!product || product.isActive === false) {
       return res.status(404).json({
         success: false,
         message: 'Product not found'
@@ -75,7 +80,10 @@ router.post('/', async (req, res) => {
     await wishlist.save();
 
     const updatedWishlist = await Wishlist.findById(wishlist._id)
-      .populate('products', 'name image price originalPrice inStock rating reviews category tag');
+      .populate(
+        'products',
+        'name title image mrp discountPercent price originalPrice inStock rating reviews category tag images.image1 images.image2 images.image3'
+      );
 
     res.json({
       success: true,
@@ -111,7 +119,10 @@ router.delete('/:productId', async (req, res) => {
     await wishlist.save();
 
     const updatedWishlist = await Wishlist.findById(wishlist._id)
-      .populate('products', 'name image price originalPrice inStock rating reviews category tag');
+      .populate(
+        'products',
+        'name title image mrp discountPercent price originalPrice inStock rating reviews category tag images.image1 images.image2 images.image3'
+      );
 
     res.json({
       success: true,

@@ -286,9 +286,94 @@ const Wishlist = () => {
 
                 {/* Wishlist Grid - Simplified for brevity */}
                 <div className="bg-white rounded-lg shadow-sm p-6">
-                    <p className="text-center text-gray-600">
-                        Wishlist items will be displayed here
-                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredItems.map((item) => {
+                            const productId = (item._id || item.id)?.toString()
+
+                            const productImage =
+                                item.image ||
+                                item.images?.image1 ||
+                                item.images?.image2 ||
+                                item.images?.image3 ||
+                                'https://via.placeholder.com/800x800?text=Product+Image'
+
+                            const productTitle = item.name || item.title || 'Untitled Product'
+
+                            const computedPrice =
+                                typeof item.price === 'number'
+                                    ? item.price
+                                    : (typeof item.mrp === 'number'
+                                        ? Math.round(item.mrp - ((item.mrp * (item.discountPercent || 0)) / 100))
+                                        : 0)
+
+                            const computedOriginal =
+                                typeof item.originalPrice === 'number'
+                                    ? item.originalPrice
+                                    : (typeof item.mrp === 'number' ? item.mrp : computedPrice)
+
+                            return (
+                                <div
+                                    key={productId}
+                                    className="border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow bg-white"
+                                >
+                                    <div className="relative">
+                                        <img
+                                            src={productImage}
+                                            alt={productTitle}
+                                            className="w-full aspect-square object-cover bg-gray-50"
+                                            loading="lazy"
+                                        />
+
+                                        <div className="absolute left-3 top-3">
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={productId ? selectedItems.includes(productId) : false}
+                                                    onChange={() => productId && handleSelectItem(productId)}
+                                                    className="h-4 w-4 rounded text-[#111827]"
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4">
+                                        <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            {item.category || item.tag || ''}
+                                        </div>
+                                        <h3 className="text-gray-900 font-bold text-sm mt-1 line-clamp-2">
+                                            {productTitle}
+                                        </h3>
+
+                                        <div className="flex items-center gap-3 mt-3">
+                                            <span className="text-[#111827] font-bold">
+                                                ₹{computedPrice.toLocaleString()}
+                                            </span>
+                                            {computedOriginal && computedOriginal !== computedPrice && (
+                                                <span className="text-gray-500 line-through text-xs">
+                                                    ₹{computedOriginal.toLocaleString()}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center gap-2 mt-4">
+                                            <button
+                                                className="flex-1 px-3 py-2 bg-[#111827] text-white text-xs font-semibold rounded-lg hover:bg-[#1f2937] transition-colors"
+                                                onClick={() => productId && handleAddToCart(productId)}
+                                            >
+                                                Add to Cart
+                                            </button>
+                                            <button
+                                                className="px-3 py-2 border border-gray-200 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                                                onClick={() => productId && handleRemoveFromWishlist(productId)}
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
         </div>

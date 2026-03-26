@@ -3,6 +3,20 @@ import Product from '../models/Product.js';
 
 const router = express.Router();
 
+const categoryAliases = {
+  'formal shirts': ['formal shirts', 'men shirts'],
+  'men shirts': ['formal shirts', 'men shirts'],
+  'tshirts': ['tshirts', 'men tshirts'],
+  'men tshirts': ['tshirts', 'men tshirts'],
+  'pants': ['pants', 'trouser'],
+  'trouser': ['pants', 'trouser'],
+};
+
+const escapeRegex = (str) => {
+  // Escape any regex-significant characters (category values are mostly words/spaces)
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 // @route   GET /api/products
 // @desc    Get all products with filtering, sorting, and pagination
 // @access  Public
@@ -22,10 +36,19 @@ router.get('/', async (req, res) => {
     } = req.query;
 
     // Build query
-    const query = { isActive: true };
+    // Show all products unless explicitly disabled.
+    // This supports manual inserted products that may not have `isActive` field.
+    const query = { isActive: { $ne: false } };
 
     if (category && category !== 'All') {
-      query.category = category;
+      const key = String(category).trim().toLowerCase();
+      const aliases = categoryAliases[key] || [key];
+      const categoryRegexes = aliases.map((item) => new RegExp(`^${escapeRegex(item)}$`, 'i'))
+      // Support both `category` and legacy/misspelled `catagory` fields from manual DB entries.
+      query.$or = [
+        { category: { $in: categoryRegexes } },
+        { catagory: { $in: categoryRegexes } }
+      ]
     }
 
     if (minPrice || maxPrice) {
@@ -98,7 +121,7 @@ router.get('/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
 
-    if (!product || !product.isActive) {
+    if (!product || product.isActive === false) {
       return res.status(404).json({
         success: false,
         message: 'Product not found'
@@ -129,7 +152,7 @@ router.get('/:id', async (req, res) => {
 // @access  Public
 router.get('/categories/list', async (req, res) => {
   try {
-    const categories = await Product.distinct('category', { isActive: true });
+    const categories = await Product.distinct('category', { isActive: { $ne: false } });
     res.json({
       success: true,
       data: categories

@@ -208,11 +208,16 @@ const ProductList = () => {
                                         <Link to={`/product/${product._id || product.id}`} key={product._id || product.id} className="group">
                                             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
                                                 <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+                                                    {(() => {
+                                                        const productImage = product.image || product.images?.image1 || product.images?.image2 || product.images?.image3 || 'https://via.placeholder.com/800x600?text=Product+Image'
+                                                        return (
                                                     <img
-                                                        src={product.image}
-                                                        alt={product.name}
+                                                        src={productImage}
+                                                        alt={product.name || product.title || 'Product'}
                                                         className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
                                                     />
+                                                        )
+                                                    })()}
                                                     {product.tag && (
                                                         <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
                                                             <span className="text-xs font-bold uppercase tracking-wider text-[#111827]">{product.tag}</span>
@@ -239,14 +244,26 @@ const ProductList = () => {
                                                         </div>
                                                     </div>
 
-                                                    <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-[#111827] transition-colors">{product.name}</h3>
+                                                    <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-[#111827] transition-colors">{product.name || product.title || 'Untitled Product'}</h3>
 
                                                     <div className="flex items-center justify-between mt-4">
                                                         <div className="flex flex-col">
+                                                            {(() => {
+                                                                const basePrice = typeof product.price === 'number'
+                                                                    ? product.price
+                                                                    : (typeof product.mrp === 'number'
+                                                                        ? Math.round(product.mrp - ((product.mrp * (product.discountPercent || 0)) / 100))
+                                                                        : 0)
+                                                                const originalPrice = typeof product.mrp === 'number'
+                                                                    ? product.mrp
+                                                                    : Math.round(basePrice * 1.25)
+                                                                return (
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-xl font-bold text-gray-900">₹{product.price.toLocaleString()}</span>
-                                                                <span className="text-sm text-gray-400 line-through">₹{Math.round(product.price * 1.25).toLocaleString()}</span>
+                                                                <span className="text-xl font-bold text-gray-900">₹{basePrice.toLocaleString()}</span>
+                                                                <span className="text-sm text-gray-400 line-through">₹{originalPrice.toLocaleString()}</span>
                                                             </div>
+                                                                )
+                                                            })()}
                                                         </div>
                                                         <span className="text-sm font-medium text-[#111827] hover:text-[#70482d]">View →</span>
                                                     </div>

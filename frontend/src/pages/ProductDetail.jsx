@@ -13,6 +13,7 @@ const ProductDetail = () => {
     const [loading, setLoading] = useState(true)
     const [selectedImage, setSelectedImage] = useState(0)
     const [selectedVariant, setSelectedVariant] = useState(null)
+    const [selectedSize, setSelectedSize] = useState(null)
     const [displayPrice, setDisplayPrice] = useState(0)
 
     // Fabric and Color Selection State
@@ -81,17 +82,90 @@ const ProductDetail = () => {
             if (product.variants && product.variants.length > 0) {
                 // Default to first variant
                 setSelectedVariant(product.variants[0])
+                setSelectedSize(null)
                 setDisplayPrice(product.variants[0].price)
             } else {
                 setSelectedVariant(null)
                 setDisplayPrice(product.price)
+
+                // Manual DB inserts might not have `variants` array.
+                // Try to infer selectable size/waist from common fields.
+                const rawSize =
+                    product.product_info?.tshirtSize ||
+                    product.tshirtSize ||
+                    product.product_info?.pantWaist ||
+                    product.pantWaist ||
+                    null
+
+                if (Array.isArray(rawSize) && rawSize.length > 0) {
+                    setSelectedSize(String(rawSize[0]))
+                } else if (typeof rawSize === 'string' && rawSize.trim()) {
+                    const options = rawSize
+                        .split(/[,\\s]+/)
+                        .map((s) => s.trim())
+                        .filter(Boolean)
+                    setSelectedSize(options[0] || null)
+                } else {
+                    setSelectedSize(null)
+                }
             }
         }
     }, [product])
 
+    const sizeOptions = (() => {
+        if (!product) return []
+        // When variants exist, sizes are handled by variant buttons.
+        if (product.variants && product.variants.length > 0) return []
+
+        const normalizedCategory = String(product.category || '').trim().toLowerCase()
+        const apparelCategories = new Set([
+            'formal shirts',
+            'men shirts',
+            'women shirts',
+            'shorts',
+            'tshirts',
+            'men tshirts',
+            'women tshirts',
+            'pants',
+            'trouser',
+        ])
+
+        // For selected apparel categories, always show standard size options.
+        if (apparelCategories.has(normalizedCategory)) {
+            return ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+        }
+
+        const rawSize =
+            product.product_info?.tshirtSize ||
+            product.tshirtSize ||
+            product.product_info?.pantWaist ||
+            product.pantWaist ||
+            null
+
+        if (Array.isArray(rawSize)) {
+            return rawSize.map((s) => String(s)).filter(Boolean)
+        }
+
+        if (typeof rawSize === 'string' && rawSize.trim()) {
+            return rawSize
+                .split(/[,\\s]+/)
+                .map((s) => s.trim())
+                .filter(Boolean)
+        }
+
+        return []
+    })()
+
+    const sizeLabel = (() => {
+        if (!product) return 'Size'
+        if (product.product_info?.pantWaist || product.pantWaist) return 'Waist'
+        return 'Size'
+    })()
+
     const [quantity, setQuantity] = useState(1)
     const [isInWishlist, setIsInWishlist] = useState(false)
     const [addingToCart, setAddingToCart] = useState(false)
+    const [wishlistToast, setWishlistToast] = useState(null)
 
     // Fetch product and fabrics from API
     useEffect(() => {
@@ -153,7 +227,7 @@ const ProductDetail = () => {
             await cartAPI.add({
                 productId: id,
                 quantity,
-                variantName: selectedVariant?.name,
+                variantName: selectedVariant?.name || selectedSize,
                 fabric: selectedFabric,
                 colorCode: selectedColorCode ? `${selectedFabric} ${selectedColorCode}` : null,
                 colorData: selectedColorData
@@ -178,7 +252,7 @@ const ProductDetail = () => {
             await cartAPI.add({
                 productId: id,
                 quantity,
-                variantName: selectedVariant?.name,
+                variantName: selectedVariant?.name || selectedSize,
                 fabric: selectedFabric,
                 colorCode: selectedColorCode ? `${selectedFabric} ${selectedColorCode}` : null,
                 colorData: selectedColorData,
@@ -204,12 +278,16 @@ const ProductDetail = () => {
             if (isInWishlist) {
                 await wishlistAPI.remove(id)
                 setIsInWishlist(false)
+                setWishlistToast({ type: 'remove', message: 'Removed from wishlist' })
             } else {
                 await wishlistAPI.add({ productId: id })
                 setIsInWishlist(true)
+                setWishlistToast({ type: 'add', message: 'Added to wishlist' })
             }
+            window.dispatchEvent(new Event('wishlistUpdated'))
         } catch (error) {
             alert(error.response?.data?.message || 'Failed to update wishlist')
+            setWishlistToast({ type: 'error', message: 'Wishlist update failed' })
         }
     }
 
@@ -250,10 +328,27 @@ const ProductDetail = () => {
         )
     }
 
-    // Prepare images (ensure multiple)
-    const images = product.images && product.images.length > 0
-        ? product.images
-        : [product.image];
+    // Prepare images for both old and new schemas
+    // - Old: product.image or product.images as array
+    // - New/manual DB: product.images.image1/image2/image3
+    const images = (() => {
+        if (Array.isArray(product.images) && product.images.length > 0) {
+            return product.images
+        }
+
+        if (product.images && typeof product.images === 'object') {
+            const objectImages = [product.images.image1, product.images.image2, product.images.image3].filter(Boolean)
+            if (objectImages.length > 0) {
+                return objectImages
+            }
+        }
+
+        if (product.image) {
+            return [product.image]
+        }
+
+        return ['https://via.placeholder.com/900x900?text=Product+Image']
+    })();
 
     // Calculate discount
     const originalPrice = product.originalPrice || product.price;
@@ -273,6 +368,21 @@ const ProductDetail = () => {
 
     return (
         <div className="bg-gray-100 min-h-screen py-4">
+            {wishlistToast && (
+                <div
+                    className={`fixed top-20 right-4 z-50 px-4 py-3 rounded-lg text-sm shadow-lg ${
+                        wishlistToast.type === 'add'
+                            ? 'bg-green-600 text-white'
+                            : wishlistToast.type === 'remove'
+                                ? 'bg-red-600 text-white'
+                                : 'bg-gray-900 text-white'
+                    }`}
+                    role="status"
+                    aria-live="polite"
+                >
+                    {wishlistToast.message}
+                </div>
+            )}
             <div className="max-w-[1400px] mx-auto bg-white shadow-sm rounded-sm overflow-hidden">
                 <div className="flex flex-col md:flex-row">
 
@@ -404,7 +514,7 @@ const ProductDetail = () => {
                         </div>
 
                         {/* Variant/Size Selection */}
-                        {product.variants && product.variants.length > 0 && (
+                        {product.variants && product.variants.length > 0 ? (
                             <div className="mb-6">
                                 <div className="text-sm text-gray-900 font-medium mb-3">
                                     Select Configuration: <span className="text-[#111827] font-bold">{selectedVariant?.name}</span>
@@ -430,7 +540,28 @@ const ProductDetail = () => {
                                     ))}
                                 </div>
                             </div>
-                        )}
+                        ) : sizeOptions.length > 0 ? (
+                            <div className="mb-6">
+                                <div className="text-sm text-gray-900 font-medium mb-3">
+                                    Select {sizeLabel}: <span className="text-[#111827] font-bold">{selectedSize || sizeOptions[0]}</span>
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                    {sizeOptions.map((opt) => (
+                                        <button
+                                            key={opt}
+                                            type="button"
+                                            onClick={() => setSelectedSize(opt)}
+                                            className={`relative px-6 py-3 border rounded-lg text-sm font-medium transition-all flex flex-col items-center justify-center min-w-[100px] ${selectedSize === opt
+                                                ? 'border-[#111827] bg-[#fff8f5] text-[#111827] shadow-sm ring-1 ring-[#111827]'
+                                                : 'border-gray-200 bg-white text-gray-600 hover:border-[#111827] hover:shadow-sm'
+                                                }`}
+                                        >
+                                            <span className="font-bold text-base">{opt}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : null}
 
                         {/* Fabric & Color Selection - Available for all products */}
                         {fabricError && (
